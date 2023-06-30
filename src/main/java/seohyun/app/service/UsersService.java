@@ -1,12 +1,14 @@
 package seohyun.app.service;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.User;
 import org.springframework.stereotype.Service;
 import seohyun.app.models.Users;
-import seohyun.app.repository.UsersRepository;
+import seohyun.app.repository.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.transaction.annotation.Transactional;
 // 컨트롤러에서 가져다 쓸 코드 미리 선언하는 곳.
@@ -18,8 +20,40 @@ public class UsersService {
 
     // UserRepository 에서 가져온 값들을 userRepository 라는 이름으로 사용하겠다.
     private final UsersRepository usersRepository;
+    private final UsersRepositoryImpl usersRepositoryImpl;
 
-    public List<Users> getUsersAll() {
-        return usersRepository.findAll();
+    public List<Users> getUsersAll() throws Exception {
+        try {
+            return usersRepository.findAll();
+        } catch (Exception e) {
+            throw new Exception(e);
+        }
     }
+
+    public Users getUser(String id) throws Exception {
+        try {
+            return usersRepository.findOneById(id);
+        } catch (Exception e) {
+            throw new Exception(e);
+        }
+    }
+
+    public Boolean CheckUserId(Users users) throws Exception {
+        try {
+            return usersRepository.existsByUsername(users.getUsername());
+        } catch (Exception e) {
+            throw new Exception(e);
+        }
+    }
+
+    @Transactional // crate, update, delete 할때는 넣기.
+    public void createUser(Users users) throws Exception {
+        try{
+            usersRepository.save(users);
+        }catch (Exception e){
+            throw new Exception(e);
+        }
+
+    }
+
 }
