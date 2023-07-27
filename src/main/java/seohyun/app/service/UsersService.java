@@ -40,7 +40,7 @@ public class UsersService {
 
     public Boolean CheckUserId(Users users) throws Exception {
         try {
-            return usersRepository.existsByUsername(users.getUsername());
+            return usersRepository.existsByUserId(users.getUserId());
         } catch (Exception e) {
             throw new Exception(e);
         }
@@ -53,7 +53,50 @@ public class UsersService {
         }catch (Exception e){
             throw new Exception(e);
         }
-
     }
 
+    @Transactional
+    public void signup(Users users) throws Exception {
+        try{
+            usersRepository.save(users);
+        } catch (Exception e) {
+            throw new Exception();
+        }
+    }
+
+    @Transactional
+    public Users signin(Users users) throws Exception {
+        try{
+            return usersRepository.findByUserIdAndPassword(users.getUserId(), users.getPassword());
+        } catch (Exception e) {
+            throw new Exception();
+        }
+    }
+
+    public Users CheckUserIdAndPassword(Users users) throws Exception {
+        try{
+            return usersRepository.findByUserIdAndPassword(users.getUserId(), users.getPassword());
+        } catch (Exception e) {
+            throw new Exception();
+        }
+    }
+
+    @Transactional
+    public void update(Users users) throws Exception {
+        try{
+            usersRepository.save(users);
+        } catch (Exception e) {
+            throw new Exception();
+        }
+    }
+
+    @Transactional
+    public void withdrawal(Users users) throws Exception {
+        try{
+            usersRepository.findById(users.getId());
+            usersRepository.deleteById(users.getId());
+        } catch (Exception e) {
+            throw new Exception();
+        }
+    }
 }

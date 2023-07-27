@@ -10,5 +10,9 @@ public interface UsersRepository extends JpaRepository<Users, String> {
     List<Users> findAll();
     Users findOneById(String id);
 
+    Users findByUserIdAndPassword(String userId, String password);
+
+    Boolean existsByUserId(String userId);
+
     Boolean existsByUsername(String username);
     }
