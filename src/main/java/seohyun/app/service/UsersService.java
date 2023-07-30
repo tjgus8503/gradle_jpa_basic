@@ -46,7 +46,7 @@ public class UsersService {
         }
     }
 
-    @Transactional // crate, update, delete 할때는 넣기.
+    @Transactional // create, update, delete 할때는 넣기.
     public void createUser(Users users) throws Exception {
         try{
             usersRepository.save(users);
@@ -56,7 +56,7 @@ public class UsersService {
     }
 
     @Transactional
-    public void signup(Users users) throws Exception {
+    public void signUp(Users users) throws Exception {
         try{
             usersRepository.save(users);
         } catch (Exception e) {
@@ -65,9 +65,9 @@ public class UsersService {
     }
 
     @Transactional
-    public Users signin(Users users) throws Exception {
+    public Users signIn(Users req) throws Exception {
         try{
-            return usersRepository.findByUserIdAndPassword(users.getUserId(), users.getPassword());
+            return usersRepository.findOneByUserId(req.getUserId());
         } catch (Exception e) {
             throw new Exception();
         }
@@ -91,9 +91,8 @@ public class UsersService {
     }
 
     @Transactional
-    public void withdrawal(Users users) throws Exception {
+    public void unRegister(Users users) throws Exception {
         try{
-            usersRepository.findById(users.getId());
             usersRepository.deleteById(users.getId());
         } catch (Exception e) {
             throw new Exception();

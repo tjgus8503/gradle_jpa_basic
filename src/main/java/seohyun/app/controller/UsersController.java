@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import seohyun.app.models.Users;
 import seohyun.app.service.UsersService;
-
+import seohyun.app.utils.Bcrypt;
 import java.util.*;
 import java.nio.ByteBuffer;
 
@@ -17,6 +17,7 @@ import java.nio.ByteBuffer;
 @RequestMapping("/api/v1/users")
 public class UsersController {
     private final UsersService usersService;
+    private final Bcrypt bcrypt;
 
     @GetMapping("/hello")
     public ResponseEntity<Object> Hello() throws Exception {
@@ -88,20 +89,23 @@ public class UsersController {
         }
     }
     @PostMapping("/signup")
-    public ResponseEntity<Object> signup(
-            @RequestBody Users users
-    ) throws Exception {
+    public ResponseEntity<Object> signUp(
+            @RequestBody Users users) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
 
             UUID uuid = UUID.randomUUID();
             users.setId(uuid.toString());
 
-            Boolean user = usersService.CheckUserId(users);
-            if (user == true) {
-                map.put("result", "failed 이미 존재하는 아이디 입니다. 다른 아이디로 입력해주세요.");
+            // 비밀번호 암호화 시키기
+            String hashPassword = bcrypt.HashPassword(users.getPassword());
+            users.setPassword(hashPassword);
+
+            Boolean userIdCheck = usersService.CheckUserId(users);
+            if (userIdCheck == true) {
+                map.put("result", "failed 이미 존재하는 아이디 입니다. 다른 아이디를 입력해주세요.");
             } else {
-                usersService.signup(users);
+                usersService.signUp(users);
                 map.put("result", "success 성공적으로 등록이 완료되었습니다.");
             }
             return new ResponseEntity<>(map, HttpStatus.OK);
@@ -115,15 +119,22 @@ public class UsersController {
 
     // 로그인
     @PostMapping("/signin")
-    public ResponseEntity<Object> signin(
-            @RequestBody Users users) throws Exception {
+    public ResponseEntity<Object> signIn(
+            @RequestBody Users req) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
-            Users user = usersService.signin(users);
-            if (user != null) {
+
+            Users user = usersService.signIn(req);
+            if (user == null) {
+                map.put("result", "failed 아이디가 존재하지 않습니다.");
+                return new ResponseEntity<>(map, HttpStatus.OK);
+            }
+
+            Boolean comparePassword = bcrypt.CompareHash(req.getPassword(), user.getPassword());
+            if (comparePassword == true) {
                 map.put("result", "success 로그인 성공");
             } else {
-                map.put("result", "failed 일치하는 정보가 없습니다.");
+                map.put("result", "failed 비밀번호가 일치하지 않습니다.");
             }
             return new ResponseEntity<>(map, HttpStatus.OK);
         } catch (Exception e) {
@@ -141,8 +152,9 @@ public class UsersController {
         try{
             Map<String, String> map = new HashMap<>();
 
-            Users user = usersService.CheckUserIdAndPassword(users);
-            if (user != null) {
+            Users checkPassword = usersService.CheckUserIdAndPassword(users);
+            if (checkPassword != null) {
+                users.setId(checkPassword.getId());
                 usersService.update(users);
                 map.put("result", "success 수정이 완료되었습니다.");
             } else {
@@ -158,15 +170,16 @@ public class UsersController {
 
     // 회원탈퇴
     // 비밀번호를 다시한번 확인 해 아이디와 비밀번호가 일치하면 회원 탈퇴 가능.
-    @PostMapping("/withdrawal")
-    public ResponseEntity<Object> withdrawal(
+    @PostMapping("/unregister")
+    public ResponseEntity<Object> unRegister(
             @RequestBody Users users) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
 
-            Users user = usersService.CheckUserIdAndPassword(users);
-            if (user != null) {
-                usersService.withdrawal(users);
+            Users checkPassword = usersService.CheckUserIdAndPassword(users);
+            if (checkPassword != null) {
+                users.setId(checkPassword.getId());
+                usersService.unRegister(users);
                 map.put("result", "success 탈퇴가 완료되었습니다.");
             } else {
                 map.put("result", "failed 비밀번호를 정확하게 입력해주세요.");
