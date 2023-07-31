@@ -65,9 +65,9 @@ public class UsersService {
     }
 
     @Transactional
-    public Users signIn(Users req) throws Exception {
+    public Users signIn(String req) throws Exception {
         try{
-            return usersRepository.findOneByUserId(req.getUserId());
+            return usersRepository.findOneByUserId(req);
         } catch (Exception e) {
             throw new Exception();
         }

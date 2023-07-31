@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import seohyun.app.models.Users;
 import seohyun.app.service.UsersService;
 import seohyun.app.utils.Bcrypt;
+import seohyun.app.utils.Jwt;
 import java.util.*;
 import java.nio.ByteBuffer;
 
@@ -18,6 +19,7 @@ import java.nio.ByteBuffer;
 public class UsersController {
     private final UsersService usersService;
     private final Bcrypt bcrypt;
+    private final Jwt jwt;
 
     @GetMapping("/hello")
     public ResponseEntity<Object> Hello() throws Exception {
@@ -124,15 +126,16 @@ public class UsersController {
         try{
             Map<String, String> map = new HashMap<>();
 
-            Users user = usersService.signIn(req);
+            Users user = usersService.signIn(req.getUserId());
             if (user == null) {
                 map.put("result", "failed 아이디가 존재하지 않습니다.");
                 return new ResponseEntity<>(map, HttpStatus.OK);
             }
-
             Boolean comparePassword = bcrypt.CompareHash(req.getPassword(), user.getPassword());
             if (comparePassword == true) {
-                map.put("result", "success 로그인 성공");
+                String xauth = jwt.CreateToken(user.getUserId());
+                map.put("xauth", xauth);
+                map.put("result", "로그인 성");
             } else {
                 map.put("result", "failed 비밀번호가 일치하지 않습니다.");
             }
@@ -186,6 +189,36 @@ public class UsersController {
             }
             return new ResponseEntity<>(map, HttpStatus.OK);
         } catch (Exception e) {
+            Map<String, String> map = new HashMap<>();
+            map.put("error", e.toString());
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        }
+    }
+
+    @PostMapping("/updatepassword")
+    public ResponseEntity<Object> updatePassword(@RequestHeader  String xauth, @RequestBody Map<String, String> req) throws Exception {
+        try{
+            Map<String, String> map = new HashMap<>();
+
+            String decoded = jwt.VerifyToken(xauth);
+
+            Users findUserId = usersService.signIn(decoded);
+            if (findUserId == null) {
+                map.put("result", "failed 해당 아이디는 존재하지 않습니다.");
+                return new ResponseEntity<>(map, HttpStatus.OK);
+            }
+
+            Boolean comparePassword = bcrypt.CompareHash(req.get("password"), findUserId.getPassword());
+            if (comparePassword == true) {
+                String hash = bcrypt.HashPassword(req.get("newPassword"));
+                findUserId.setPassword(hash);
+                usersService.update(findUserId);
+                map.put("result", "success 수정이 완료되었습니다.");
+            } else {
+                map.put("result", "failed 비밀번호가 일치하지 않습니다.");
+            }
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        } catch (Exception e){
             Map<String, String> map = new HashMap<>();
             map.put("error", e.toString());
             return new ResponseEntity<>(map, HttpStatus.OK);
