@@ -135,7 +135,7 @@ public class UsersController {
             if (comparePassword == true) {
                 String xauth = jwt.CreateToken(user.getUserId());
                 map.put("xauth", xauth);
-                map.put("result", "로그인 성");
+                map.put("result", "success 로그인 성공");
             } else {
                 map.put("result", "failed 비밀번호가 일치하지 않습니다.");
             }
@@ -196,7 +196,8 @@ public class UsersController {
     }
 
     @PostMapping("/updatepassword")
-    public ResponseEntity<Object> updatePassword(@RequestHeader  String xauth, @RequestBody Map<String, String> req) throws Exception {
+    public ResponseEntity<Object> updatePassword(
+            @RequestHeader String xauth, @RequestBody Map<String, String> req) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
 
@@ -225,19 +226,5 @@ public class UsersController {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-    // update id = 1 username = hi, password = hello
-
-    // delete id = 2 delete
 
 }
